@@ -1,3 +1,3 @@
 # HDLC Protocol
 
-How-Delightfully-Luciously-Cool Protocol
+How-Delightfully-Lusciously-Cool Protocol
