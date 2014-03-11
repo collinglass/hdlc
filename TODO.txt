@@ -1,0 +1,4 @@
+1. Reconstruct the split messages - Ron
+2. Send appropriate replies for messages received (NR, NS)
+3. There was a third point but I don't really remember what it was
+4. Write the report
