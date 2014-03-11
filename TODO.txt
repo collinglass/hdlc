@@ -2,3 +2,9 @@
 2. Send appropriate replies for messages received (NR, NS)
 3. There was a third point but I don't really remember what it was
 4. Write the report
+
+
+Reconstructing split messages:
+	currently adds a '-' to the end of the strings which our clients can look for to check if the message piece it sees is the last one
+	problem in that it isn't currently looking for the correct NR, NS, so it doesn't wait to confirm messages are sent/received from the Primary
+	when NR/NS is fixed, message construction should work
