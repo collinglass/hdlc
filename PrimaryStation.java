@@ -174,86 +174,95 @@ public class PrimaryStation {
         		
         		
         		// recv response from the client
-        		inputLine = s_in[i].readLine();
-        		double math = (Math.floor(Math.random()*100)+1);
-        		if((Math.floor(Math.random()*100)+1)<successRate)
-        		{
-        			
-	        		if(inputLine != null) {		
-	        			// get control field of the response frame
-	        			response = inputLine.substring(16, 24);
-	        			System.out.println("This is the string received: " + inputLine);
-	        		
-	        			if(response.substring(0,4).equals("1000")) {
-	        				// recv something no data to send from B
-	        				System.out.println("Receive RR, *, F from station " + clientID[i]);
-	        			}
-	        			else if(response.substring(0, 1).equals("0")) {
-	                		// ==============================================================
-	        				// insert codes here to handle the frame received
-	        					
-	    					//if the frame is to the primary station; consume it        					
-	        				
-	    					//if the frame is to the secondary station; buffer the frame to send
-	        					if(inputLine.substring(8,16).equals("00000000"))
-	        					{
-	        						//do nothing? what do we do about messages sent to server?
-	        					}
-	        					else
-	        					{
-	        						String controlStr = inputLine.substring(16,24);
-	        						String recNs = controlStr.substring(1,3);
-	        						int recNsInt = Integer.parseInt(recNs,2);
-	        						int recNrInt = recNsInt+1;
-	        						String recNr = Integer.toBinaryString(recNrInt);
-	        						
-									 while(recNs.length()<3)
-									 {
-										 recNs = "0" + recNs;
-									 }
-									 
-									 while(recNr.length()<3)
-									 {
-										 recNr = "0" + recNr;
-									 }
-	        						
-	        						s_out[i].println(flag + address[i] + "0" + recNs + "0" + recNr); 
-	        						
-	        						System.out.println("Sending the following reply: " + flag + address[i] + "0" + recNs + "0" + recNr);
-	        						
-	        						String binAddress = inputLine.substring(8,16); 
-	        								
-	        						String message = inputLine.substring(24, inputLine.length());
-	        						String msgSub;
-	        						if(message.length() > 64)
-	        						{
-	        							for(i = 0; message.length() > 64; i++)
-	        							{
-	        								msgSub = message.substring(0,64);
-	        								message = message.substring(64,message.length());
-	        								sMessages[i] = flag + binAddress + "00000000" + msgSub;
-	        								
-	        							}
-                                        i++;
-                                        sMessages[i] = flag + binAddress + "00000000" + message;
-	        						}
-	        						else
-	        						{
-	        							sMessages[0] = flag + binAddress + "00000000" + message;
-	        						}
-	        						
-	        					}
-	        				
-	
-	        					    				
-	        				
-	                		// ==============================================================
-	        			}
-        			}
-        		}
-        	}
-        	
-    		// ==============================================================
+			boolean finMsg = false;
+			int j = 0;
+			while(!finMsg)
+			{
+				inputLine = s_in[i].readLine();
+				if(inputLine.substring(inputLine.length()-1).equals("-"))
+				{
+					finMsg = true;
+				}
+
+				double math = (Math.floor(Math.random()*100)+1);
+				if((Math.floor(Math.random()*100)+1)<successRate)
+				{
+					
+					if(inputLine != null) {		
+						// get control field of the response frame
+						response = inputLine.substring(16, 24);
+					
+						if(response.substring(0,4).equals("1000")) {
+							// recv something no data to send from B
+							System.out.println("Receive RR, *, F from station " + clientID[i]);
+						}
+						else if(response.substring(0, 1).equals("0")) {
+						// ==============================================================
+							// insert codes here to handle the frame received
+								
+							//if the frame is to the primary station; consume it        					
+							
+							//if the frame is to the secondary station; buffer the frame to send
+								if(inputLine.substring(8,16).equals("00000000"))
+								{
+									//do nothing? what do we do about messages sent to server?
+								}
+								else
+								{
+									String controlStr = inputLine.substring(16,24);
+									String recNs = controlStr.substring(1,3);
+									int recNsInt = Integer.parseInt(recNs,2);
+									int recNrInt = recNsInt+1;
+									String recNr = Integer.toBinaryString(recNrInt);
+									
+										 while(recNs.length()<3)
+										 {
+											 recNs = "0" + recNs;
+										 }
+										 
+										 while(recNr.length()<3)
+										 {
+											 recNr = "0" + recNr;
+										 }
+
+									//reply to the client sending the message
+									s_out[i].println(flag + address[i] + "0" + recNs + "0" + recNr); 
+									
+									System.out.println("Sending the following reply: " + flag + address[i] + "0" + recNs + "0" + recNr);
+									//send the message forward to the recipient
+									String binAddress = inputLine.substring(8,16); 
+											
+									String message = inputLine.substring(24, inputLine.length());
+									String msgSub;
+									if(message.length() > 64)
+									{
+										for(; message.length() > 64; i++)
+										{
+											msgSub = message.substring(0,64);
+											message = message.substring(64,message.length());
+											sMessages[j] = flag + binAddress + "00000000" + msgSub;
+											
+										}
+										j++;
+										sMessages[j] = flag + binAddress + "00000000" + message;
+									}
+									else
+									{
+										sMessages[0] = flag + binAddress + "00000000" + message;
+									}
+									
+								}
+							
+		
+												
+							
+						// ==============================================================
+						}
+					}
+        			} // end successrate check if
+        		} //end finmsg while
+        	} //end for loop over clients
+   		// ==============================================================
         	// insert codes here to send frames in the buffer       	
         	        		
         	// send I frame

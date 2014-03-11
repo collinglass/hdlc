@@ -19,15 +19,18 @@ public class SecondaryStation {
 		String flag = "01111110";
 		String address = null;  
 		String response = null; // control field of the socket input
+		String senderAddr = "00000000"; 
 		int ns = 0; // send sequence number
 		int nr = 0; //receive sequence number
 		
-		String[] messageQueue = new String[10];
+		String[] messageQueue = new String[100];
 		for(int i = 0; i<messageQueue.length; i++)
 		{
 			messageQueue[i] = null;
 		}
 		
+		String[] receivedMsgs = new String[100];
+	
 		//
 		String answer = null; // input using keyboard
 		//
@@ -73,165 +76,183 @@ public class SecondaryStation {
 					
 					System.out.println("sent UA msg");
 				}
+
 				
 				// main loop; recv and send data msgs
 				while (true) {
-					responseLine = is.readLine();
-					response = responseLine.substring(16, 24);
-					
-					System.out.println("recv msg -- control " + response);				
-					
-					// recv  msg
-					if(response.substring(0,5).equals("10001")) {
+					boolean finMsg=false;
+					int msgCntr = 0;
+					while (!finMsg) {
+						responseLine = is.readLine();
+						if(responseLine.substring(responseLine.length()-1).equals("-"))
+						{
+							finMsg=true;
+						}
+						response = responseLine.substring(16, 24);
 						
-						// enter data msg using keyboard
-						System.out.println("Would you like to send a message? (y/n)");
-						answer = in.readLine();						
+						System.out.println("recv msg -- control " + response);				
 						
-						if(answer.toLowerCase().equals("y") || answer.toLowerCase().equals("yes")) {
-							System.out.println("Please enter the destination address using 8-bits binary string (e.g. 00000001):");
-							address = in.readLine();
+						// recv  msg
+						if(response.substring(0,5).equals("10001")) {
 							
-							System.out.println("Please enter the message to send?");
-							answer = in.readLine();
+							// enter data msg using keyboard
+							System.out.println("Would you like to send a message? (y/n)");
+							answer = in.readLine();						
 							
-							//===========================================================
-							// insert codes here to send an I msg;
-							
-							 byte[] byteArray = answer.getBytes();
-							 StringBuilder binaryConversion = new StringBuilder();
-							 for (byte b : byteArray)
-							 {
-							    int val = b;
-							    for (int i = 0; i < 8; i++)
-							    {
-							       binaryConversion.append((val & 128) == 0 ? 0 : 1);
-							       val <<= 1;
-							    }
-							 }
-							
-							 answer = binaryConversion.toString();
-							 
-							 String substr;
-							 String str;
-							 
-							 ns = 0;
-							 nr = 0;
-
-							 String binNs = Integer.toBinaryString(ns);
-							 String binNr = Integer.toBinaryString(nr);
+							if(answer.toLowerCase().equals("y") || answer.toLowerCase().equals("yes")) {
+								System.out.println("Please enter the destination address using 8-bits binary string (e.g. 00000001):");
+								address = in.readLine();
 								
-							 
-							 if(answer.length()>64)
-							 {
-								 substr = answer.substring(0,64);
-								 int j;
-								 for(j = 0; answer.length()>64; j++)
+								System.out.println("Please enter the message to send?");
+								answer = in.readLine();
+								
+								//===========================================================
+								// insert codes here to send an I msg;
+								
+								 byte[] byteArray = answer.getBytes();
+								 StringBuilder binaryConversion = new StringBuilder();
+								 for (byte b : byteArray)
 								 {
-								 	binNs = Integer.toBinaryString(ns);
-							 		binNr = Integer.toBinaryString(nr);
-									 answer = answer.substring(64,answer.length());
-
-									 while(binNs.length()<3)
-									 {
-										 binNs = "0" + binNs;
-									 }
-									 
-									 while(binNr.length()<3)
-									 {
-										 binNr = "0" + "binNr";
-									 }
-									 
-									 str = flag + address + "0" + binNs + "1" + binNr + substr;
-									 messageQueue[j] = str;
-									 nr++;
-									 ns++;
+								    int val = b;
+								    for (int i = 0; i < 8; i++)
+								    {
+								       binaryConversion.append((val & 128) == 0 ? 0 : 1);
+								       val <<= 1;
+								    }
+								 }
 								
+								 answer = binaryConversion.toString();
+								 
+								 String substr;
+								 String str;
+								 
+								 ns = 0;
+								 nr = 0;
+
+								 String binNs = Integer.toBinaryString(ns);
+								 String binNr = Integer.toBinaryString(nr);
+									
+								 
+								 if(answer.length()>64)
+								 {
+									 substr = answer.substring(0,64);
+									 int j;
+									 for(j = 0; answer.length()>64; j++)
+									 {
+										binNs = Integer.toBinaryString(ns);
+										binNr = Integer.toBinaryString(nr);
+										answer = answer.substring(64,answer.length());
+
+										while(binNs.length()<3)
+										{
+											 binNs = "0" + binNs;
+										}
+										 
+										while(binNr.length()<3)
+										{
+											 binNr = "0" + binNr;
+										}
+										 
+										str = flag + address + "0" + binNs + "1" + binNr + substr;
+										messageQueue[j] = str;
+										nr++;
+										ns++;
+									
+									 }
+									 
+									 str = flag + address + "0" + binNs + "1" + binNr + substr+ "-";
+									 messageQueue[j+1] = str;
+									 
+								 }
+								 else
+								 {
+									 str = flag + address + "00000000" + answer + "-";
+									 messageQueue[0] = str;
 								 }
 								 
-								 str = flag + address + "0" + binNs + "1" + binNr + substr;
-								 messageQueue[j+1] = str;
+								 //send messages and check for response
+								 //wait for .5 seconds for reply
+								 long time = System.currentTimeMillis()+500;
+								 String resp = null;
 								 
-							 }
-							 else
-							 {
-								 str = flag + address + "00000000" + answer;
-								 messageQueue[0] = str;
-							 }
-							 
-							 //send messages and check for response
-							 //wait for .5 seconds for reply
-							 long time = System.currentTimeMillis()+500;
-							 String resp = null;
-							 
-							 ns = 0;
-							 
-							 for(int i = 0; messageQueue[i]!=null; i++)
-							 {
-								 os.println(messageQueue[i]);
-								 System.out.println("Trying to send this message: " + messageQueue[i] + " from position " + i + " in our queue.");
+								 ns = 0;
 								 
-								 try
+								 for(int i = 0; messageQueue[i]!=null; i++)
 								 {
-									 resp = is.readLine();
-									 System.out.println("Response received: " + resp);
-								 } catch (InterruptedIOException e)
-								 {}
-								 
-								 if(resp != null)
-								 {
-									 if(Integer.parseInt(resp.substring(21,24)) == (ns+1))
+									 os.println(messageQueue[i]);
+									 System.out.println("Trying to send this message: " + messageQueue[i] + " from position " + i + " in our queue.");
+									 
+									 try
 									 {
-										 //message received
-										 System.out.println("Message received");
-										 ns++;
-										 messageQueue[i] = null;
+										 resp = is.readLine();
+										 System.out.println("Response received: " + resp);
+									 } catch (InterruptedIOException e)
+									 {}
+									 
+									 if(resp != null)
+									 {
+										 if(Integer.parseInt(resp.substring(21,24)) == (ns+1))
+										 {
+											 //message received
+											 System.out.println("Message received");
+											 ns++;
+											 messageQueue[i] = null;
+										 }
+										 else
+										 {
+											 //must resend message
+											 System.out.println("Message NOT received, NR: "+ resp.substring(21,24));
+											 i--;
+										 }
 									 }
 									 else
 									 {
 										 //must resend message
-										 System.out.println("Message NOT received, NR: "+ resp.substring(21,24));
+										 System.out.println("Message NOT received");
 										 i--;
 									 }
-								 }
-								 else
-								 {
-									 //must resend message
-									 System.out.println("Message NOT received");
-									 i--;
+									 
 								 }
 								 
-							 }
-							 
-							//===========================================================
+								//===========================================================
+							
+							}				
+							else {
+								//===========================================================
+								// insert codes here to send <RR,*,F>
+								
+								String str = flag + "00000000" + "10000000";
+								os.println(str);
+								
+								//===========================================================
+							}
+						}
 						
-						}				
-						else {
-							//===========================================================
-							// insert codes here to send <RR,*,F>
+						// recv an I frame
+						if(response.substring(0,1).equals("0")) {
+							String data = responseLine.substring(24, responseLine.length());
+							System.out.println("");
+							System.out.println("Received data: " + data);						
 							
-							String str = flag + "00000000" + "10000000";
-							os.println(str);
+							senderAddr = responseLine.substring(8,16);
+							String msg = decodeBinary(data);
 							
-							//===========================================================
+							receivedMsgs[msgCntr] = msg;					
+							msgCntr++;
+							
+							nr = Integer.parseInt(response.substring(1,4), 2) + 1;
+							System.out.println("nr: " + nr);
 						}
 					}
-					
-					// recv an I frame
-					if(response.substring(0,1).equals("0")) {
-						String data = responseLine.substring(24, responseLine.length());
-						System.out.println("");
-						System.out.println("Received data: " + data);						
-						
-						int senderAddr = Integer.parseInt(responseLine.substring(8,16),2);
-						String msg = decodeBinary(data);
-						
-						System.out.println("Message received from " + senderAddr + ": " + msg);
-						
-						
-						nr = Integer.parseInt(response.substring(1,4), 2) + 1;
-						System.out.println("nr: " + nr);
+					String recMsg = "";	
+					for(int k=0; k<msgCntr; k++)	
+					{
+						recMsg = recMsg + receivedMsgs[k];
 					}
+
+					System.out.println("Received message from: " + senderAddr + " "  + recMsg);
+					finMsg=false;
+
 				}
 			} 
 			catch (UnknownHostException e) {
