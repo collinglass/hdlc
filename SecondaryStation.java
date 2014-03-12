@@ -22,6 +22,8 @@ public class SecondaryStation {
 		String senderAddr = "00000000"; 
 		int ns = 0; // send sequence number
 		int nr = 0; //receive sequence number
+		int maxFrames = 4; //size of sliding window
+		int currentFrame = 0; //counter variable for the sliding window
 		
 		String[] messageQueue = new String[100];
 		for(int i = 0; i<messageQueue.length; i++)
@@ -180,20 +182,28 @@ public class SecondaryStation {
 								 for(int i = 0; messageQueue[i]!=null; i++)
 								 {
 									 os.println(messageQueue[i]);
+									 currentFrame++;
 									 System.out.println("Trying to send this message: " + messageQueue[i] + " from position " + i + " in our queue.");
 									 
-									 try
-									 {
-										 resp = is.readLine();
-										 System.out.println("Response received: " + resp);
-									 } catch (InterruptedIOException e)
-									 {}
+									 if(currentFrame < maxFrames){
+										 try
+										 {
+											 resp = is.readLine();
+											 System.out.println("Response received: " + resp);
+										 } catch (InterruptedIOException e)
+										 {}
+									 }
+									 else{
+										System.out.println("Maximum number of frames reached. Wating on receiver.");
+										resp = null;
+									 }
 									 
 									 if(resp != null)
 									 {
 										 if(Integer.parseInt(resp.substring(21,24)) == (ns+1))
 										 {
 											 //message received
+											 currentFrame--;
 											 System.out.println("Message received");
 											 ns++;
 											 messageQueue[i] = null;
