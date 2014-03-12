@@ -44,6 +44,7 @@ public class PrimaryStation {
         String information = "";
         
         boolean bListening = true;
+	int cnt = 0;
         
         String[] sMessages; // frame buffer
         sMessages = new String[20];
@@ -176,6 +177,7 @@ public class PrimaryStation {
         		// recv response from the client
 			boolean finMsg = false;
 			int j = 0;
+			cnt = 0;
 			while(!finMsg)
 			{
 				inputLine = s_in[i].readLine();
@@ -190,11 +192,13 @@ public class PrimaryStation {
 					
 					if(inputLine != null) {		
 						// get control field of the response frame
+
 						response = inputLine.substring(16, 24);
 					
 						if(response.substring(0,4).equals("1000")) {
 							// recv something no data to send from B
 							System.out.println("Receive RR, *, F from station " + clientID[i]);
+							finMsg=true;
 						}
 						else if(response.substring(0, 1).equals("0")) {
 						// ==============================================================
@@ -210,52 +214,34 @@ public class PrimaryStation {
 								else
 								{
 									String controlStr = inputLine.substring(16,24);
-									String recNs = controlStr.substring(1,3);
+									String recNs = controlStr.substring(1,4);
 									int recNsInt = Integer.parseInt(recNs,2);
 									int recNrInt = recNsInt+1;
 									String recNr = Integer.toBinaryString(recNrInt);
 									
-										 while(recNs.length()<3)
-										 {
-											 recNs = "0" + recNs;
-										 }
+									while(recNs.length()<3)
+									{
+										recNs = "0" + recNs;
+									}
 										 
-										 while(recNr.length()<3)
-										 {
-											 recNr = "0" + recNr;
-										 }
+									while(recNr.length()<3)
+									{
+										recNr = "0" + recNr;
+									}
 
 									//reply to the client sending the message
+
 									s_out[i].println(flag + address[i] + "0" + recNs + "0" + recNr); 
-									
 									System.out.println("Sending the following reply: " + flag + address[i] + "0" + recNs + "0" + recNr);
 									//send the message forward to the recipient
 									String binAddress = inputLine.substring(8,16); 
 											
 									String message = inputLine.substring(24, inputLine.length());
-									String msgSub;
-									if(message.length() > 64)
-									{
-										for(; message.length() > 64; i++)
-										{
-											msgSub = message.substring(0,64);
-											message = message.substring(64,message.length());
-											sMessages[j] = flag + binAddress + "00000000" + msgSub;
-											
-										}
-										j++;
-										sMessages[j] = flag + binAddress + "00000000" + message;
-									}
-									else
-									{
-										sMessages[0] = flag + binAddress + "00000000" + message;
-									}
-									
+									sMessages[cnt] = flag + binAddress + "00000000" + message;
+									cnt++;
 								}
 							
 		
-												
-							
 						// ==============================================================
 						}
 					}
@@ -267,12 +253,13 @@ public class PrimaryStation {
         	        		
         	// send I frame
         	
-        	int cnt = 0;
+        	cnt = 0;
         	
         	while(sMessages[cnt]!=null)
         	{
         		int decimalAddress = Integer.parseInt(sMessages[cnt].substring(8,16),2);
-        		s_out[decimalAddress-1].println(sMessages[0]);
+        		s_out[decimalAddress-1].println(sMessages[cnt]);
+			System.out.println("Sending: " + sMessages[cnt]);
         		sMessages[cnt]=null; //clear after we're done sending it
         		cnt++;
         	}

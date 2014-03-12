@@ -124,6 +124,8 @@ public class SecondaryStation {
 								 }
 								
 								 answer = binaryConversion.toString();
+				
+								System.out.println("Answer.length() = " + answer.length());
 								 
 								 String substr;
 								 String str;
@@ -134,12 +136,12 @@ public class SecondaryStation {
 								 String binNs = Integer.toBinaryString(ns);
 								 String binNr = Integer.toBinaryString(nr);
 									
+								int j = 0;
 								 
 								 if(answer.length()>64)
 								 {
 									 substr = answer.substring(0,64);
-									 int j;
-									 for(j = 0; answer.length()>64; j++)
+									 for(; answer.length()>64; j++)
 									 {
 										binNs = Integer.toBinaryString(ns);
 										binNr = Integer.toBinaryString(nr);
@@ -159,32 +161,42 @@ public class SecondaryStation {
 										messageQueue[j] = str;
 										nr++;
 										ns++;
-									
 									 }
 									 
-									 str = flag + address + "0" + binNs + "1" + binNr + substr+ "-";
-									 messageQueue[j+1] = str;
+									binNs = Integer.toBinaryString(ns);
+									binNr = Integer.toBinaryString(nr);
+
+									while(binNs.length()<3)
+									{
+										 binNs = "0" + binNs;
+									}
+									 
+									while(binNr.length()<3)
+									{
+										 binNr = "0" + binNr;
+									}								
+
+									str = flag + address + "0" + binNs + "1" + binNr + substr+ "-";
+									messageQueue[j] = str;
+									j++;
 									 
 								 }
 								 else
 								 {
 									 str = flag + address + "00000000" + answer + "-";
 									 messageQueue[0] = str;
+									j++;
 								 }
 								 
-								 //send messages and check for response
-								 //wait for .5 seconds for reply
-								 long time = System.currentTimeMillis()+500;
 								 String resp = null;
 								 
 								 ns = 0;
 								 
-								 for(int i = 0; messageQueue[i]!=null; i++)
+								 for(int i = 0; i<j; i++)
 								 {
 									 os.println(messageQueue[i]);
 									 currentFrame++;
 									 System.out.println("Trying to send this message: " + messageQueue[i] + " from position " + i + " in our queue.");
-									 
 									 if(currentFrame < maxFrames){
 										 try
 										 {
@@ -200,13 +212,13 @@ public class SecondaryStation {
 									 
 									 if(resp != null)
 									 {
-										 if(Integer.parseInt(resp.substring(21,24)) == (ns+1))
+										 if(Integer.parseInt(resp.substring(21,24),2)==(ns+1))
 										 {
-											 //message received
-											 currentFrame--;
-											 System.out.println("Message received");
-											 ns++;
-											 messageQueue[i] = null;
+											//message received
+											currentFrame--;
+											System.out.println("Message received by Primary");
+											ns++;
+											messageQueue[i] = null;
 										 }
 										 else
 										 {
@@ -222,8 +234,9 @@ public class SecondaryStation {
 										 i--;
 									 }
 									 
-								 }
-								 
+								 }//end of message queue
+								finMsg=true;
+								 System.out.println("or here?");
 								//===========================================================
 							
 							}				
@@ -233,7 +246,6 @@ public class SecondaryStation {
 								
 								String str = flag + "00000000" + "10000000";
 								os.println(str);
-								
 								//===========================================================
 							}
 						}
@@ -261,7 +273,6 @@ public class SecondaryStation {
 					}
 
 					System.out.println("Received message from: " + senderAddr + " "  + recMsg);
-					finMsg=false;
 
 				}
 			} 
