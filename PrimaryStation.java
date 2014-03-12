@@ -215,7 +215,37 @@ public class PrimaryStation {
 							//if the frame is to the secondary station; buffer the frame to send
 								if(inputLine.substring(8,16).equals("00000000"))
 								{
-									//do nothing? what do we do about messages sent to server?
+									int sendrAddress = i+1;
+									String binSendrAddress = Integer.toBinaryString(sendrAddress);
+								
+									while(binSendrAddress.length()<8)
+									{
+										binSendrAddress = "0" + binSendrAddress;
+									}
+
+
+									String messageFromP = decodeBinary(inputLine.substring(24,inputLine.length()));
+									System.out.println("Message from Secondary at address " + binSendrAddress + ": " + messageFromP);
+									String controlStr = inputLine.substring(16,24);
+									String recNs = controlStr.substring(1,4);
+									int recNsInt = Integer.parseInt(recNs,2);
+									int recNrInt = recNsInt+1;
+									String recNr = Integer.toBinaryString(recNrInt);
+									
+									while(recNs.length()<3)
+									{
+										recNs = "0" + recNs;
+									}
+										 
+									while(recNr.length()<3)
+									{
+										recNr = "0" + recNr;
+									}
+
+									//reply to the client sending the message
+
+									s_out[i].println(flag + address[i] + "0" + recNs + "0" + recNr); 
+									System.out.println("Sending the following reply: " + flag + address[i] + "0" + recNs + "0" + recNr);								
 								}
 								else
 								{
@@ -303,5 +333,30 @@ public class PrimaryStation {
         serverSocket.close();
         
     }// end main 
+
+	public static String decodeBinary(String bin)
+	{
+
+		char[] result = bin.toCharArray();
+		
+		String conversionString = "";
+		String resultString = "";
+		int binChar = 0;
+		char asciiChar = '0';
+		
+		for(int i = 0; i<result.length; i++)
+		{
+			conversionString = conversionString+result[i];
+			if(i!= 0 && (i+1)%8 == 0)
+			{
+				binChar = Integer.parseInt(conversionString,2);
+				asciiChar = (char)binChar;
+				resultString = resultString+asciiChar;
+				conversionString = "";
+			}
+		}
+		
+		return resultString;
+	}
 }// end of class PrimaryStation
 

@@ -125,8 +125,6 @@ public class SecondaryStation {
 								
 								 answer = binaryConversion.toString();
 				
-								System.out.println("Answer.length() = " + answer.length());
-								 
 								 String substr;
 								 String str;
 								 
@@ -140,11 +138,11 @@ public class SecondaryStation {
 								 
 								 if(answer.length()>64)
 								 {
-									 substr = answer.substring(0,64);
 									 for(; answer.length()>64; j++)
 									 {
 										binNs = Integer.toBinaryString(ns);
 										binNr = Integer.toBinaryString(nr);
+									 	substr = answer.substring(0,64);
 										answer = answer.substring(64,answer.length());
 
 										while(binNs.length()<3)
