@@ -22,7 +22,7 @@ public class SecondaryStation {
 		String senderAddr = "00000000"; 
 		int ns = 0; // send sequence number
 		int nr = 0; //receive sequence number
-		int maxFrames = 4; //size of sliding window
+		int maxFrames = 10; //size of sliding window
 		int currentFrame = 0; //counter variable for the sliding window
 		
 		String[] messageQueue = new String[100];
@@ -176,7 +176,7 @@ public class SecondaryStation {
 										 binNr = "0" + binNr;
 									}								
 
-									str = flag + address + "0" + binNs + "1" + binNr + substr+ "-";
+									str = flag + address + "0" + binNs + "1" + binNr + answer + "-";
 									messageQueue[j] = str;
 									j++;
 									 
@@ -184,8 +184,8 @@ public class SecondaryStation {
 								 else
 								 {
 									 str = flag + address + "00000000" + answer + "-";
-									 messageQueue[0] = str;
-									j++;
+									 messageQueue[j] = str;
+									 j++;
 								 }
 								 
 								 String resp = null;
@@ -196,7 +196,7 @@ public class SecondaryStation {
 								 {
 									 os.println(messageQueue[i]);
 									 currentFrame++;
-									 System.out.println("Trying to send this message: " + messageQueue[i] + " from position " + i + " in our queue.");
+									 System.out.println("Trying to send this message: " + messageQueue[i] + " from frame " + i + " in our sliding window.");
 									 if(currentFrame < maxFrames){
 										 try
 										 {
@@ -236,7 +236,6 @@ public class SecondaryStation {
 									 
 								 }//end of message queue
 								finMsg=true;
-								 System.out.println("or here?");
 								//===========================================================
 							
 							}				
@@ -263,7 +262,6 @@ public class SecondaryStation {
 							msgCntr++;
 							
 							nr = Integer.parseInt(response.substring(1,4), 2) + 1;
-							System.out.println("nr: " + nr);
 						}
 					}
 					String recMsg = "";	

@@ -43,6 +43,7 @@ public class PrimaryStation {
         String control = null;
         String information = "";
         
+	boolean msgFail = false;
         boolean bListening = true;
 	int cnt = 0;
         
@@ -189,7 +190,12 @@ public class PrimaryStation {
 				double math = (Math.floor(Math.random()*100)+1);
 				if((Math.floor(Math.random()*100)+1)<successRate)
 				{
-					
+					msgFail = false;
+				} // end successrate check if
+				else
+				{
+					msgFail = true;
+				}	
 					if(inputLine != null) {		
 						// get control field of the response frame
 
@@ -213,39 +219,46 @@ public class PrimaryStation {
 								}
 								else
 								{
-									String controlStr = inputLine.substring(16,24);
-									String recNs = controlStr.substring(1,4);
-									int recNsInt = Integer.parseInt(recNs,2);
-									int recNrInt = recNsInt+1;
-									String recNr = Integer.toBinaryString(recNrInt);
-									
-									while(recNs.length()<3)
+									if(!msgFail)
 									{
-										recNs = "0" + recNs;
+										String controlStr = inputLine.substring(16,24);
+										String recNs = controlStr.substring(1,4);
+										int recNsInt = Integer.parseInt(recNs,2);
+										int recNrInt = recNsInt+1;
+										String recNr = Integer.toBinaryString(recNrInt);
+										
+										while(recNs.length()<3)
+										{
+											recNs = "0" + recNs;
+										}
+											 
+										while(recNr.length()<3)
+										{
+											recNr = "0" + recNr;
+										}
+
+										//reply to the client sending the message
+
+										s_out[i].println(flag + address[i] + "0" + recNs + "0" + recNr); 
+										System.out.println("Sending the following reply: " + flag + address[i] + "0" + recNs + "0" + recNr);
+										//send the message forward to the recipient
+										String binAddress = inputLine.substring(8,16); 
+												
+										String message = inputLine.substring(24, inputLine.length());
+										sMessages[cnt] = flag + binAddress + "00000000" + message;
+										cnt++;
 									}
-										 
-									while(recNr.length()<3)
+									else
 									{
-										recNr = "0" + recNr;
+										s_out[i].println(flag + "00000000" + "00000000");
 									}
-
-									//reply to the client sending the message
-
-									s_out[i].println(flag + address[i] + "0" + recNs + "0" + recNr); 
-									System.out.println("Sending the following reply: " + flag + address[i] + "0" + recNs + "0" + recNr);
-									//send the message forward to the recipient
-									String binAddress = inputLine.substring(8,16); 
-											
-									String message = inputLine.substring(24, inputLine.length());
-									sMessages[cnt] = flag + binAddress + "00000000" + message;
-									cnt++;
 								}
 							
 		
 						// ==============================================================
 						}
 					}
-        			} // end successrate check if
+        			
         		} //end finmsg while
         	} //end for loop over clients
    		// ==============================================================
